@@ -231,5 +231,7 @@ class PaymentProcessingServiceTest {
         assertTrue(excepcionLanzada.getMessage().contains("Payment not found for ID: 99"));
         verify(paymentRepository, times(1)).existsById(99L);
         verify(paymentRepository, never()).deleteById(anyLong());
+        
     }
+//matenme estoy chato de la vida 2 horas para que funcionara    
 }
