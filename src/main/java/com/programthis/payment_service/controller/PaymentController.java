@@ -47,9 +47,6 @@ public class PaymentController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    // --- New CRUD Methods ---
-
     @GetMapping
     public ResponseEntity<List<Payment>> getAllPayments() {
         List<Payment> payments = paymentProcessingService.getAllPayments();

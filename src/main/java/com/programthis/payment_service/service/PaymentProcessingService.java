@@ -56,8 +56,6 @@ public class PaymentProcessingService {
                 .orElseThrow(() -> new RuntimeException("Payment not found for transaction ID: " + transactionId));
     }
 
-    // --- New CRUD Methods ---
-
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
     }
