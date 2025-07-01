@@ -23,27 +23,24 @@ public class PaymentProcessingService {
         Payment payment = new Payment();
         payment.setOrderId(paymentRequest.orderId());
         payment.setAmount(paymentRequest.amount());
-        // A more robust implementation would parse paymentMethodDetails to set the actual payment method
-        payment.setPaymentMethod("PROCESSED_METHOD");
+        payment.setPaymentMethod("PROCESSED_METHOD"); // Se puede mejorar en una versión futura
         payment.setTransactionDate(LocalDateTime.now());
 
         boolean paymentSuccessful = simulatePaymentGatewayInteraction(paymentRequest.paymentMethodDetails());
 
         if (paymentSuccessful) {
             payment.setPaymentStatus("COMPLETED");
-            payment.setTransactionId(UUID.randomUUID().toString()); // Simulate actual transaction ID from gateway
+            payment.setTransactionId(UUID.randomUUID().toString());
         } else {
             payment.setPaymentStatus("FAILED");
-            // If the payment fails before getting a transaction ID, don't assign one.
-            // Or, you might store an error code from the gateway here.
         }
         return paymentRepository.save(payment);
     }
 
     private boolean simulatePaymentGatewayInteraction(String paymentMethodDetails) {
-        System.out.println("Simulating payment gateway interaction for: " + paymentMethodDetails);
-        // This is a simple simulation; in a real app, you'd integrate with a payment gateway API.
-        return !paymentMethodDetails.contains("fail");
+        // En una app real, aquí se integraría con una pasarela de pago.
+        // La simulación hace que falle si los detalles contienen "fail".
+        return paymentMethodDetails == null || !paymentMethodDetails.contains("fail");
     }
 
     public Payment getPaymentStatusByOrderId(String orderId) {
@@ -63,12 +60,14 @@ public class PaymentProcessingService {
     public Payment updatePayment(Long id, Payment paymentDetails) {
         return paymentRepository.findById(id)
                 .map(payment -> {
+                    // **AQUÍ ESTÁ LA CORRECCIÓN CLAVE**
+                    // Se copian todas las propiedades del objeto de entrada al objeto existente.
                     payment.setOrderId(paymentDetails.getOrderId());
                     payment.setAmount(paymentDetails.getAmount());
                     payment.setPaymentMethod(paymentDetails.getPaymentMethod());
                     payment.setPaymentStatus(paymentDetails.getPaymentStatus());
                     payment.setTransactionId(paymentDetails.getTransactionId());
-                    payment.setTransactionDate(paymentDetails.getTransactionDate()); // Allow updating transaction date if needed
+                    payment.setTransactionDate(paymentDetails.getTransactionDate());
                     return paymentRepository.save(payment);
                 })
                 .orElseThrow(() -> new RuntimeException("Payment not found for ID: " + id));

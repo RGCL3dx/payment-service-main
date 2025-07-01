@@ -3,9 +3,7 @@ package com.programthis.payment_service.controller;
 import com.programthis.payment_service.entity.Payment;
 import com.programthis.payment_service.service.PaymentProcessingService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -27,11 +25,7 @@ public class PaymentController {
     @Autowired
     private PaymentProcessingService paymentProcessingService;
 
-    @Operation(summary = "Procesa un nuevo pago", responses = {
-        @ApiResponse(responseCode = "200", description = "Pago procesado exitosamente",
-                     content = @Content(mediaType = "application/hal+json", schema = @Schema(implementation = Payment.class))),
-        @ApiResponse(responseCode = "400", description = "Error en el procesamiento del pago")
-    })
+    @Operation(summary = "Procesa un nuevo pago")
     @PostMapping("/process")
     public ResponseEntity<EntityModel<Payment>> processPayment(@RequestBody PaymentProcessingService.PaymentRequest paymentRequest) {
         Payment payment = paymentProcessingService.processPayment(paymentRequest);
@@ -96,18 +90,26 @@ public class PaymentController {
         }
     }
 
+ 
     private EntityModel<Payment> toModel(Payment payment) {
-        // Asegurarse de que el pago no sea nulo y tenga un ID de orden
-        if (payment == null || payment.getOrderId() == null) {
-            // Manejar caso nulo, quizás devolviendo un modelo sin enlaces o lanzando una excepción
-            return EntityModel.of(payment);
+        EntityModel<Payment> model = EntityModel.of(payment);
+        
+        if (payment != null && payment.getOrderId() != null) {
+            try {
+                WebMvcLinkBuilder selfLink = linkTo(methodOn(PaymentController.class).getPaymentStatusByOrderId(payment.getOrderId()));
+                model.add(selfLink.withSelfRel());
+            } catch (Exception e) {
+  
+            }
         }
         
-        WebMvcLinkBuilder selfLink = linkTo(methodOn(PaymentController.class).getPaymentStatusByOrderId(payment.getOrderId()));
-        WebMvcLinkBuilder allPaymentsLink = linkTo(methodOn(PaymentController.class).getAllPayments());
+        try {
+            WebMvcLinkBuilder allPaymentsLink = linkTo(methodOn(PaymentController.class).getAllPayments());
+            model.add(allPaymentsLink.withRel("all-payments"));
+        } catch (Exception e) {
+  
+        }
         
-        return EntityModel.of(payment,
-                selfLink.withSelfRel(),
-                allPaymentsLink.withRel("all-payments"));
+        return model;
     }
 }
